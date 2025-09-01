@@ -2,6 +2,7 @@ import { AStar, AStarResult, PathFindResultType } from "./AStar";
 import { GameMap, TileRef } from "../game/GameMap";
 import { DistanceBasedBezierCurve } from "../utilities/Line";
 import { Game } from "../game/Game";
+import { HPACache } from "./HPAStar";
 import { MiniAStar } from "./MiniAStar";
 import { PseudoRandom } from "../PseudoRandom";
 
@@ -112,6 +113,7 @@ export class PathFinder {
   private constructor(
     private readonly game: Game,
     private readonly newAStar: (curr: TileRef, dst: TileRef) => AStar<TileRef>,
+    private readonly waterPath = true,
   ) {}
 
   public static Mini(
@@ -120,6 +122,8 @@ export class PathFinder {
     waterPath = true,
     maxTries = 20,
   ) {
+    HPACache.initForGame(game.map(), waterPath).catch(() => {});
+
     return new PathFinder(game, (curr: TileRef, dst: TileRef) => {
       return new MiniAStar(
         game.map(),
@@ -130,7 +134,7 @@ export class PathFinder {
         maxTries,
         waterPath,
       );
-    });
+    }, waterPath);
   }
 
   nextTile(
@@ -157,6 +161,20 @@ export class PathFinder {
         this.curr = curr;
         this.dst = dst;
         this.path = null;
+
+        const distance = this.game.manhattanDist(curr, dst);
+        if (distance >= 750 && HPACache.isReady(this.game.map(), this.waterPath)) {
+          const hpaPath = HPACache.findPath(this.game.map(), curr, dst, this.waterPath);
+          if (hpaPath && hpaPath.length > 1) {
+            console.log(`[HPA*] SUCCESS: Pathfinding (distance: ${distance})`);
+            this.path = hpaPath.slice(1);
+            this.computeFinished = true;
+            return this.nextTile(curr, dst);
+          } else {
+            console.log(`[A*] HPA* failed, using A* (distance: ${distance})`);
+          }
+        }
+
         this.aStar = this.newAStar(curr, dst);
         this.computeFinished = false;
         return this.nextTile(curr, dst);

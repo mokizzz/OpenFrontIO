@@ -10,6 +10,8 @@
     "tunnel": "npm run build-prod && npm run start:server",
     "test": "jest",
     "perf": "npx tsx tests/perf/*.ts",
+    "perf:astar": "npx tsx tests/perf/AstarPerf.ts",
+    "perf:hpa": "npx tsx tests/perf/HPAStarPerf.ts",
     "test:coverage": "jest --coverage",
     "format": "prettier --ignore-unknown --write .",
     "lint": "eslint",

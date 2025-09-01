@@ -37,6 +37,10 @@ export class GameMapAdapter implements GraphAdapter<TileRef> {
     const toShore = this.gameMap.isShoreline(to);
     return !toWater || fromShore || toShore;
   }
+
+  get isWaterPath(): boolean {
+    return this.waterPath;
+  }
 }
 export class MiniAStar implements AStar<TileRef> {
   private readonly aStar: AStar<TileRef>;
