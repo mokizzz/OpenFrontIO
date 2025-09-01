@@ -38,7 +38,12 @@ for (const clusterSize of clusterSizes) {
     createAdapter(true),
   );
 
-  hpaStar.compute();
+  // Keep calling compute() until preprocessing is complete
+  let result;
+  do {
+    result = hpaStar.compute();
+  } while (result === 1);
+
   const preprocessTime = Date.now() - startTime;
 
   preprocessedInstances.set(clusterSize, hpaStar);
